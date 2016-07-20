@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Socket.IO chat</title>
+  </head>
+  <body >
+
+    <section>
+      <div id="container" style="width: 300px; height:300px; border: 1px solid #DDDDDD; display: inline-block; float:left;"></div>
+      <div id="position" style="width: 300px; height:300px; border: 1px solid #DDDDDD; display: inline-block; float:left;"></div>
+      <div id="warzone" style="width: 300px; height:300px; border: 1px solid #DDDDDD; display: inline-block; float:left;">
+        <canvas id="canvas" width="300" height="300"></canvas>
+      </div>
+    </section>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/virtualjoystick.js"></script>
+    <script>
+      var socket = io();
+
+      var joistop = true;
+
+      var joystick	= new VirtualJoystick({
+				container	: document.getElementById('container'),
+        strokeStyle: '#AAAAAA',
+        fillStyle: '#CCCCCC',
+        limitStickTravel: true,
+		    stickRadius	: 45,
+        stationaryBase: true,
+        baseX: 150,
+        baseY: 150,
+				mouseSupport	: true,
+			});
+
+			joystick.addEventListener('touchStart', function(){
+				console.log('down');
+        joistop = false;
+			});
+
+			joystick.addEventListener('touchEnd', function(){
+				console.log('up');
+        joistop = true;
+			});
+
+      setInterval(function(){
+        if (joistop == false) {
+  				var res	= ''
+  					+ (joystick.right()	? '6'	: '')
+  					+ (joystick.up()	? '8'		: '')
+  					+ (joystick.left()	? '4'	: '')
+  					+ (joystick.down()	? '2' 	: '');
+            socket.emit('efc_in', res);
+        }
+			}, 1/30 * 1000);
+
+      socket.on('efc_out', function(msg){
+
+        var c = document.getElementById("canvas");
+        var ctx = c.getContext("2d");
+        ctx.clearRect(0, 0, 300, 300);
+
+        var creeps = JSON.parse(msg);
+        var output = '<ul>';
+        for (var creepId in creeps) {
+          var creep = creeps[creepId];
+          console.log(creep);
+          output += '<li>';
+          output += creep.msg;
+          output += '</li>';
+          // canva
+          // //canvas
+          c = document.getElementById("canvas");
+          ctx = c.getContext("2d");
+          ctx.beginPath();
+          ctx.fillStyle = creep.color;
+          ctx.fill();
+          ctx.arc(creep.x, creep.y, 5, 0, 2*Math.PI);
+          ctx.fill();
+          ctx.closePath();
+        }
+        output += '</ul>';
+        var outputEl	= document.getElementById('position');
+        outputEl.innerHTML = output;
+      });
+
+    </script>
+  </body>
+</html>
