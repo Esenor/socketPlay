@@ -3,8 +3,8 @@ function creepObject () {
   this.color = getRandomColor();
   this.position = 'null';
   this.msg = 'err';
-  this.x = 0;
-  this.y = 0;
+  this.x = 150;
+  this.y = 150;
 };
 
 creepObject.prototype.locate = function () {
